@@ -69,9 +69,16 @@ const compile = scss => {
         if (status === 0) {
           postcss([autoprefixer]).process(text).then(({ css }) => {
             const style = document.createElement('style');
+            style.setAttribute('data-source', scss.address);
             style.setAttribute('type', 'text/css');
             style.textContent = css;
-            document.getElementsByTagName('head')[0].appendChild(style);
+
+            const existingStyle = document.querySelector(`style[data-source="${scss.address}"]`);
+            if (existingStyle) {
+              existingStyle.textContent = css;
+            } else {
+              document.getElementsByTagName('head')[0].appendChild(style);
+            }
             // return an empty module in the module pipeline itself
             resolve('');
           });
@@ -92,6 +99,7 @@ export default load => {
     .then(resp => {
       return {
         content: resp.responseText ? resp.responseText : resp,
+        address: load.address,
         options: {
           indentedSyntax,
           importer: { urlBase },
